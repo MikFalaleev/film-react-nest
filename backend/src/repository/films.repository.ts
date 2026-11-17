@@ -42,7 +42,7 @@ export class FilmsRepository implements OnModuleInit, OnModuleDestroy {
 
     return (film.schedule ?? []).map((session) => ({
       ...session,
-      hall: String(session.hall),
+      hall: Number(session.hall),
     }));
   }
 

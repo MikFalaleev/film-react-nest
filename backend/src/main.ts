@@ -5,7 +5,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
-  const port = Number(config.get<string>('PORT', '3101'));
+  const port = Number(config.get<string>('PORT', '3000'));
 
   app.setGlobalPrefix('api/afisha');
   app.enableCors();
