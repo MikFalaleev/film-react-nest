@@ -1,4 +1,3 @@
-//TODO реализовать DTO для /orders
 export class TicketDto {
   film: string;
   session: string;
