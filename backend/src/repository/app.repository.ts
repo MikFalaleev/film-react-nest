@@ -7,6 +7,10 @@ import { Film } from './entities/film.entity';
 import { Schedule } from './entities/schedule.entity';
 import { FilmsRepository } from './films.repository';
 
+type FilmWithSchedule = FilmDto & {
+  schedule: SessionDto[];
+};
+
 @Injectable()
 export class AppRepository implements FilmsRepository {
   constructor(
@@ -16,8 +20,10 @@ export class AppRepository implements FilmsRepository {
     private readonly schedules: Repository<Schedule>,
   ) {}
 
-  async findAll(): Promise<FilmDto[]> {
-    const films = await this.films.find();
+  async findAll(): Promise<FilmWithSchedule[]> {
+    const films = await this.films.find({
+      relations: { schedule: true },
+    });
 
     return films.map((film) => ({
       id: film.id,
@@ -29,6 +35,7 @@ export class AppRepository implements FilmsRepository {
       description: film.description,
       image: film.image,
       cover: film.cover,
+      schedule: film.schedule.map((session) => this.toSessionDto(session)),
     }));
   }
 
@@ -48,15 +55,7 @@ export class AppRepository implements FilmsRepository {
       order: { daytime: 'ASC', id: 'ASC' },
     });
 
-    return schedule.map((session) => ({
-      id: session.id,
-      daytime: session.daytime,
-      hall: session.hall,
-      rows: session.rows,
-      seats: session.seats,
-      price: session.price,
-      taken: session.taken,
-    }));
+    return schedule.map((session) => this.toSessionDto(session));
   }
 
   async reserveSeat(
@@ -103,5 +102,17 @@ export class AppRepository implements FilmsRepository {
       .andWhere('"filmId" = :filmId', { filmId })
       .setParameter('seat', seat)
       .execute();
+  }
+
+  private toSessionDto(session: Schedule): SessionDto {
+    return {
+      id: session.id,
+      daytime: session.daytime,
+      hall: session.hall,
+      rows: session.rows,
+      seats: session.seats,
+      price: session.price,
+      taken: session.taken,
+    };
   }
 }
