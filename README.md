@@ -1,36 +1,134 @@
-# FILM!
+# Film!
 
-## Установка
+Сервис бронирования билетов в кинотеатр.
 
-### MongoDB
+Фронтенд: React и Vite.
+Бэкенд: NestJS, TypeORM и PostgreSQL.
 
-Установите MongoDB скачав дистрибутив с официального сайта или с помощью пакетного менеджера вашей ОС. Также можно воспользоваться Docker (см. ветку `feat/docker`.
+Фильмы хранятся в таблице films, сеансы — в schedules.
+Один фильм связан с несколькими сеансами.
+Занятые места сохраняются в поле taken соответствующего сеанса.
 
-Выполните скрипт `test/mongodb_initial_stub.js` в консоли `mongo`.
+## Подготовка
 
-### Бэкенд
+Понадобятся Node.js, npm и запущенный Docker Desktop.
 
-Перейдите в папку с исходным кодом бэкенда
+Выполните команды из корня проекта:
 
-`cd backend`
+```bash
+npm ci --prefix backend
+```
 
-Установите зависимости (точно такие же, как в package-lock.json) помощью команд
+```bash
+npm ci --prefix frontend
+```
 
-`npm ci` или `yarn install --frozen-lockfile`
+Создайте локальные файлы настроек:
 
-Создайте `.env` файл из примера `.env.example`, в нём укажите:
+```bash
+cp backend/.env.example backend/.env
+```
 
-* `DATABASE_DRIVER` - тип драйвера СУБД - в нашем случае это `mongodb` 
-* `DATABASE_URL` - адрес СУБД MongoDB, например `mongodb://127.0.0.1:27017/practicum`.  
+```bash
+cp frontend/.env.example frontend/.env
+```
 
-MongoDB должна быть установлена и запущена.
+Пример настроек бэкенда:
 
-Запустите бэкенд:
+```dotenv
+DATABASE_DRIVER=postgres
+DATABASE_URL=postgres://127.0.0.1:5433/prac
+DATABASE_USERNAME=prac
+DATABASE_PASSWORD=prac
+PORT=3101
+DEBUG=
+```
 
-`npm start:debug`
+Пример настроек фронтенда:
 
-Для проверки отправьте тестовый запрос с помощью Postman или `curl`.
+```dotenv
+VITE_API_URL=http://127.0.0.1:3101/api/afisha
+VITE_CDN_URL=http://127.0.0.1:3101/content/afisha
+```
 
+## База данных
 
+Запустите PostgreSQL:
 
+```bash
+docker compose up -d --wait
+```
 
+При первом запуске создайте пользователя, базу и таблицы:
+
+```bash
+docker exec -i postgres_container psql -v ON_ERROR_STOP=1 -U postgres -d postgres < backend/test/prac.init.sql
+```
+
+Загрузите тестовые данные:
+
+```bash
+docker exec -i postgres_container psql -v ON_ERROR_STOP=1 -U prac -d prac < backend/test/prac.films.sql
+```
+
+```bash
+docker exec -i postgres_container psql -v ON_ERROR_STOP=1 -U prac -d prac < backend/test/prac.shedules.sql
+```
+
+Инициализация и импорт выполняются один раз для новой базы.
+Данные PostgreSQL сохраняются в Docker volume.
+
+## Запуск приложения
+
+В первом терминале:
+
+```bash
+cd backend
+```
+
+```bash
+npm run start:dev
+```
+
+Во втором терминале, начиная из корня проекта:
+
+```bash
+cd frontend
+```
+
+```bash
+npm run dev
+```
+
+Откройте адрес, который Vite выведет в строке Local.
+Обычно это http://localhost:5173.
+
+## Проверки
+
+Из корня проекта:
+
+```bash
+npm run lint --prefix backend
+```
+
+```bash
+npm run build --prefix backend
+```
+
+```bash
+npm run lint --prefix frontend
+```
+
+```bash
+npm run build --prefix frontend
+```
+
+## API
+
+- GET /api/afisha/films — список фильмов.
+- GET /api/afisha/films/:id/schedule — расписание фильма.
+- POST /api/afisha/order — бронирование билетов.
+- GET /content/afisha/* — статические изображения.
+
+Описание API находится в film.yml.
+Коллекция Postman находится в film.postman.json.
