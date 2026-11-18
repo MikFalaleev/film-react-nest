@@ -1,3 +1,4 @@
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
@@ -10,6 +11,17 @@ async function bootstrap() {
   app.setGlobalPrefix('api/afisha');
   app.enableCors();
   app.enableShutdownHooks();
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      exceptionFactory: () =>
+        new BadRequestException({
+          error: 'Некорректные данные запроса',
+        }),
+    }),
+  );
 
   await app.listen(port);
 }
